@@ -1,6 +1,7 @@
 yolo11l.pt
 yolov5l.pt
 input_videos/
+output_video/
 runs/
 models/best_11l.pt
 models/last_11l.pt
