@@ -32,9 +32,13 @@ class tracker:
             "referees":[],
             "ball":[]
         }
+        def add_track_data(tracks, category, frame_num, track_id, bbox):
+            while len(tracks[category]) <= frame_num:
+                tracks[category].append({})
+            tracks[category][frame_num][track_id] = {"bbox": bbox}
 
         for frame_num, detection in enumerate(detections):
-            cls_names = detection[0].names  # dictionary form key is 0, 1, 2, 3 and values are ball, goalkeeper, player, referee
+            cls_names = detection.names  # dictionary form key is 0, 1, 2, 3 and values are ball, goalkeeper, player, referee
             cls_names_inv = {v:k for k, v in cls_names.items()}
 
             # Convert to supervision detection format
@@ -57,17 +61,17 @@ class tracker:
                 track_id = frame_detection[4]
 
                 if cls_id == cls_names_inv["player"]:
-                    tracks["players"][frame_num][track_id] = {"bbox":bbox}
+                    add_track_data(tracks,"players",frame_num,track_id, bbox)
 
                 if cls_id == cls_names_inv["referee"]:
-                    tracks["referees"][frame_num][track_id] = {"bbox":bbox}
+                    add_track_data(tracks,"referees",frame_num,track_id, bbox)
             
             for frame_detection in detection_supervision:
                 bbox = frame_detection[0].tolist()
                 cls_id = frame_detection[3]
 
                 if cls_id == cls_names_inv["ball"]:
-                    tracks["ball"][frame_num][1] = {"bbox":bbox}
+                    add_track_data(tracks,"ball",frame_num,1, bbox)
 
             if stub_path is not None:
                 with open(stub_path, 'wb') as f:
