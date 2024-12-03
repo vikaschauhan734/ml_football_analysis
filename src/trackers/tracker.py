@@ -2,7 +2,8 @@ from ultralytics import YOLO
 import supervision as sv
 import pickle
 import os
-
+import cv2
+from src.utils.bbox_utils import get_bbox_width, get_center_of_bbox
 
 
 class tracker:
@@ -32,10 +33,6 @@ class tracker:
             "referees":[],
             "ball":[]
         }
-        def add_track_data(tracks, category, frame_num, track_id, bbox):
-            while len(tracks[category]) <= frame_num:
-                tracks[category].append({})
-            tracks[category][frame_num][track_id] = {"bbox": bbox}
 
         for frame_num, detection in enumerate(detections):
             cls_names = detection.names  # dictionary form key is 0, 1, 2, 3 and values are ball, goalkeeper, player, referee
@@ -53,7 +50,9 @@ class tracker:
             detection_with_tracks = self.tracker.update_with_detections(detection_supervision)
 
             # Appending a dictionary player track id as key and bounding box list as value 
-            #tracks["players"].append({})
+            tracks["players"].append({})
+            tracks["referees"].append({})
+            tracks["ball"].append({})
 
             for frame_detection in detection_with_tracks:
                 bbox = frame_detection[0].tolist()
@@ -61,17 +60,17 @@ class tracker:
                 track_id = frame_detection[4]
 
                 if cls_id == cls_names_inv["player"]:
-                    add_track_data(tracks,"players",frame_num,track_id, bbox)
+                    tracks["players"][frame_num][track_id] = {"bbox":bbox}
 
                 if cls_id == cls_names_inv["referee"]:
-                    add_track_data(tracks,"referees",frame_num,track_id, bbox)
+                    tracks["referees"][frame_num][track_id] = {"bbox":bbox}
             
             for frame_detection in detection_supervision:
                 bbox = frame_detection[0].tolist()
                 cls_id = frame_detection[3]
 
                 if cls_id == cls_names_inv["ball"]:
-                    add_track_data(tracks,"ball",frame_num,1, bbox)
+                    tracks["ball"][frame_num][1] = {"bbox":bbox}
 
             if stub_path is not None:
                 with open(stub_path, 'wb') as f:
@@ -79,3 +78,37 @@ class tracker:
 
 
             return tracks # dictionary of lists of dictionaries
+    
+    def draw_ellipse(self, frame, bbox, color, track_id): # Drawing ellipse
+        y2 = int(bbox[3]) # y2 is the bottom
+        x_center,_ = get_center_of_bbox(bbox) # center of the x axis
+        width = get_bbox_width(bbox) # Width of ellipse
+
+        cv2.ellipse(frame,
+                    center=(x_center, y2),
+                    axes=(int(width), int(0.35*width)), # minor axis will be 35% of major axis.
+                    angle=0.0,
+                    startAngle=45, # ellipse drawing will start from 45 degrees
+                    endAngle=235,   # and end before 235 degrees
+                    color=color,
+                    thickness=2,
+                    lineType=cv2.LINE_4
+                    )
+
+        return frame
+
+    def draw_annotations(self, video_frames, tracks):
+        output_video_frames = []
+        for frame_num, frame in enumerate(video_frames):
+            frame = frame.copy()
+
+            player_dict = tracks['players'][frame_num]
+            referee_dict = tracks['referees'][frame_num]
+            ball_dict = tracks['ball'][frame_num]
+
+            # Draw players
+            for track_id, player in player_dict.items():
+                frame = self.draw_ellipse(frame, player["bbox"], (0, 0, 255), track_id) # (0, 0, 255) is the red color in BGR format.
+        
+            output_video_frames.append(frame)
+        return output_video_frames
