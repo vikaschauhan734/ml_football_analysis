@@ -72,12 +72,12 @@ class tracker:
                 if cls_id == cls_names_inv["ball"]:
                     tracks["ball"][frame_num][1] = {"bbox":bbox}
 
-            if stub_path is not None:
-                with open(stub_path, 'wb') as f:
-                    pickle.dump(tracks, f)
+        if stub_path is not None:
+            with open(stub_path, 'wb') as f:
+                pickle.dump(tracks, f)
 
 
-            return tracks # dictionary of lists of dictionaries
+        return tracks # dictionary of lists of dictionaries
     
     def draw_ellipse(self, frame, bbox, color, track_id): # Drawing ellipse
         y2 = int(bbox[3]) # y2 is the bottom
