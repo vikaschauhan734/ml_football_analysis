@@ -79,7 +79,7 @@ class tracker:
 
         return tracks # dictionary of lists of dictionaries
     
-    def draw_ellipse(self, frame, bbox, color, track_id): # Drawing ellipse
+    def draw_ellipse(self, frame, bbox, color, track_id=None): # Drawing ellipse
         y2 = int(bbox[3]) # y2 is the bottom
         x_center,_ = get_center_of_bbox(bbox) # center of the x axis
         width = get_bbox_width(bbox) # Width of ellipse
@@ -88,13 +88,41 @@ class tracker:
                     center=(x_center, y2),
                     axes=(int(width), int(0.35*width)), # minor axis will be 35% of major axis.
                     angle=0.0,
-                    startAngle=45, # ellipse drawing will start from 45 degrees
+                    startAngle=-45, # ellipse drawing will start from 45 degrees
                     endAngle=235,   # and end before 235 degrees
                     color=color,
                     thickness=2,
                     lineType=cv2.LINE_4
                     )
 
+        rectangle_width = 40
+        rectangle_height = 20
+        x1_rect = x_center - rectangle_width//2 # Top left corner of the rectangle
+        x2_rect = x_center + rectangle_width//2 # Bottom right corner of the rectangle
+        y1_rect = (y2 - rectangle_height//2) + 15 # Just random buffer 
+        y2_rect = (y2 + rectangle_height//2) + 15
+
+        if track_id is not None:
+            cv2.rectangle(frame,
+                          (int(x1_rect),int(y1_rect)),
+                          (int(x2_rect),int(y2_rect)),
+                          color,
+                          cv2.FILLED # Filled Rectangle
+                          )
+            x1_text = x1_rect + 12
+            y1_text = y1_rect + 15
+            if track_id > 99:
+                x1_text -= 10 
+
+            cv2.putText(
+                frame,
+                f"{track_id}",
+                (int(x1_text),int(y1_text)),
+                cv2.FONT_HERSHEY_SIMPLEX, # Font type
+                0.6, # Font ratio
+                (0,0,0), # Black Color
+                2 # Thickness
+            )
         return frame
 
     def draw_annotations(self, video_frames, tracks):
@@ -109,6 +137,10 @@ class tracker:
             # Draw players
             for track_id, player in player_dict.items():
                 framee = self.draw_ellipse(frame, player["bbox"], (0, 0, 255), track_id) # (0, 0, 255) is the red color in BGR format.
-        
+
+            # Draw referees
+            for _ , referee in referee_dict.items():
+                framee = self.draw_ellipse(frame, referee["bbox"], (0, 255, 255)) # (0, 255, 255) is the yellow color in BGR format.
+
             output_video_frames.append(framee)
         return output_video_frames
