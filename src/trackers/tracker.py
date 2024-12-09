@@ -1,6 +1,7 @@
 from ultralytics import YOLO
 import supervision as sv
 import pickle
+import numpy as np
 import os
 import cv2
 from src.utils.bbox_utils import get_bbox_width, get_center_of_bbox
@@ -125,6 +126,18 @@ class tracker:
             )
         return frame
 
+    def draw_triangle(self, frame, bbox, color): # Inverted triangle
+        y = int(bbox[1])
+        x,_ = get_center_of_bbox(bbox)
+
+        triangle_points = np.array([[x,y],
+                                    [x-10,y-20],
+                                    [x+10,y-20]
+        ])
+        cv2.drawContours(frame, [triangle_points],0,color, cv2.FILLED) # Drawing filled triangle
+        cv2.drawContours(frame, [triangle_points],0,(0,0,0), 2) # Drawing border for triangle
+        return frame
+
     def draw_annotations(self, video_frames, tracks):
         output_video_frames = []
         for frame_num, frame in enumerate(video_frames):
@@ -141,6 +154,10 @@ class tracker:
             # Draw referees
             for _ , referee in referee_dict.items():
                 framee = self.draw_ellipse(frame, referee["bbox"], (0, 255, 255)) # (0, 255, 255) is the yellow color in BGR format.
+
+            # Draw ball
+            for track_id, ball in ball_dict.items():
+                frame = self.draw_triangle(frame, ball["bbox"], (0, 255, 0)) # Green color
 
             output_video_frames.append(framee)
         return output_video_frames
