@@ -149,7 +149,8 @@ class tracker:
 
             # Draw players
             for track_id, player in player_dict.items():
-                framee = self.draw_ellipse(frame, player["bbox"], (0, 0, 255), track_id) # (0, 0, 255) is the red color in BGR format.
+                color = player.get("team_color", (0,0,255))
+                framee = self.draw_ellipse(frame, player["bbox"], color, track_id) # (0, 0, 255) is the red color in BGR format.
 
             # Draw referees
             for _ , referee in referee_dict.items():

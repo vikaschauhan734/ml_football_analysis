@@ -1,6 +1,7 @@
 from src.utils.video_utils import read_video, save_video
 from src.trackers.tracker import tracker
 import cv2
+from src.team_assigner import TeamAssigner
 
 def main():
     # Read video
@@ -23,6 +24,16 @@ def main():
     #     cv2.imwrite(f'output_video/cropped_img.jpg', cropped_image)
 
     #     break
+
+    # Assign Player Teams
+    team_assign = TeamAssigner()
+    team_assign.assign_team_color(video_frames[0], tracks['players'][0]) # first frame and tracks only of first frame
+
+    for frame_num, player_track in enumerate(tracks['players']):
+        for player_id, track in player_track.items():
+            team = team_assign.get_player_team(video_frames[frame_num], track['bbox'], player_id)
+            tracks['players'][frame_num][player_id]['team'] = team # Assigning team
+            tracks['players'][frame_num][player_id]['team_color'] = team_assign.team_colors[team] # Assigning team color
 
     # Draw output
     ## Draw object tracks
