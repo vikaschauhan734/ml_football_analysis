@@ -2,6 +2,7 @@ from ultralytics import YOLO
 import supervision as sv
 import pickle
 import numpy as np
+import pandas as pd
 import os
 import cv2
 from src.utils.bbox_utils import get_bbox_width, get_center_of_bbox
@@ -11,6 +12,20 @@ class tracker:
     def __init__(self, model_path):
         self.model = YOLO(model_path)
         self.tracker = sv.ByteTrack()
+
+    def interpolate_ball_positions(self, ball_positions):
+        ball_positions = [x.get(1, {}).get("bbox", []) for x in ball_positions] # Get the data of track id = 1 if it is not present then give empty dictionary. And from that get bbox if not bbox then empty list
+        df_ball_positions = pd.DataFrame(ball_positions, columns=['x1','y1','x2','y2'])
+
+        # Interpolate missing values
+        df_ball_positions = df_ball_positions.interpolate() 
+        # If missing detection is first one than it will not interploate so we will replace with nearest detection
+        df_ball_positions = df_ball_positions.bfill()
+
+        ball_positions = [{1: {"bbox":x}} for x in df_ball_positions.to_numpy().tolist()]
+
+        return ball_positions
+
 
     def detect_frames(self, frames):
         batch_size = 20 # 20 frames in one loop to solve memory issue problem
