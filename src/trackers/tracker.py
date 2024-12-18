@@ -167,6 +167,9 @@ class tracker:
                 color = player.get("team_color", (0,0,255))
                 framee = self.draw_ellipse(frame, player["bbox"], color, track_id) # (0, 0, 255) is the red color in BGR format.
 
+                if player.get('has_ball', False):
+                    frame = self.draw_triangle(frame, player['bbox'], (0,0,255))
+
             # Draw referees
             for _ , referee in referee_dict.items():
                 framee = self.draw_ellipse(frame, referee["bbox"], (0, 255, 255)) # (0, 255, 255) is the yellow color in BGR format.
