@@ -2,6 +2,7 @@ from src.utils.video_utils import read_video, save_video
 from src.trackers.tracker import tracker
 from src.team_assigner import TeamAssigner
 from src.player_ball_assigner import PlayerBallAssigner
+import numpy as np
 
 def main():
     # Read video
@@ -40,16 +41,22 @@ def main():
 
     # Assign Ball Aquaistion to Player
     player_assigner = PlayerBallAssigner()
+    team_ball_control = []
+
     for frame_num, player_track in enumerate(tracks['players']):
         ball_bbox = tracks['ball'][frame_num][1]['bbox']
         assigned_player = player_assigner.assign_ball_to_player(player_track, ball_bbox)
 
         if assigned_player != -1:
             tracks['players'][frame_num][assigned_player]['has_ball'] = True
+            team_ball_control.append(tracks['players'][frame_num][assigned_player]['team'])
+        else:
+            team_ball_control.append(team_ball_control[-1]) # Last one that had the ball
+    team_ball_control = np.array(team_ball_control)
 
     # Draw output
     ## Draw object tracks
-    output_video_frames = tracke.draw_annotations(video_frames, tracks)
+    output_video_frames = tracke.draw_annotations(video_frames, tracks, team_ball_control)
 
     # Save video
     save_video(output_video_frames, 'output_video/output_video.avi')
