@@ -1,9 +1,12 @@
 import pickle
 import cv2
 import numpy as np
+from src.utils.bbox_utils import measure_distance, measure_xy_distance
 
 class CameraMovementEstimator():
     def __init__(self,frame):
+        self.minimum_distance = 5 # Minimum distance for camera movement is 5 pixels
+
         self.lk_params = dict(
             winSize = (15, 15), # Search Window size
             maxLevel = 2, # Downscale the image to find the large features; Downscale upto twice
@@ -41,4 +44,18 @@ class CameraMovementEstimator():
             camera_movement_x, camera_movement_y = 0,0
 
             for i, (new, old) in enumerate(new_features, old_features):
-                new
+                new_features_point = new.ravel()
+                old_features_point = old.ravel()
+
+                distance = measure_distance(new_features_point, old_features_point)
+                if distance > max_distance:
+                    max_distance = distance
+                    camera_movement_x, camera_movement_y = measure_xy_distance(old_features_point, new_features_point)
+            
+            if max_distance > self.minimum_distance:
+                camera_movement[frame_num] = [camera_movement_x, camera_movement_y]
+                old_features = cv2.goodFeaturesToTrack(frame_gray, **self.features)
+
+            old_gray = frame_gray.copy()
+
+        return camera_movement
