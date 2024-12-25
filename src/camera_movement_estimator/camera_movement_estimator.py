@@ -1,5 +1,6 @@
 import pickle
 import cv2
+import os
 import numpy as np
 from src.utils.bbox_utils import measure_distance, measure_xy_distance
 
@@ -28,8 +29,11 @@ class CameraMovementEstimator():
     
     def get_camera_movement(self, frames, read_from_stub=False, stub_path=None):
         # Read the stub
+        if read_from_stub and stub_path is not None and os.path.exists(stub_path):
+            with open(stub_path, 'rb') as f:
+                return pickle.load(f)
 
-        camera_movement = [[0,0]*len(frames)] # [x,y]
+        camera_movement = [[0,0]]*len(frames) # [x,y]
 
         # Covering image to gray
         old_gray = cv2.cvtColor(frames[0], cv2.COLOR_BGR2GRAY)
@@ -43,7 +47,7 @@ class CameraMovementEstimator():
             max_distance = 0
             camera_movement_x, camera_movement_y = 0,0
 
-            for i, (new, old) in enumerate(new_features, old_features):
+            for i, (new, old) in enumerate(zip(new_features, old_features)):
                 new_features_point = new.ravel()
                 old_features_point = old.ravel()
 
@@ -58,4 +62,28 @@ class CameraMovementEstimator():
 
             old_gray = frame_gray.copy()
 
+        if stub_path is not None:
+            with open(stub_path, 'wb') as f:
+                pickle.dump(camera_movement, f)
+
         return camera_movement
+    
+    def draw_camera_movement(self, frames, camera_movement_per_frame):
+        output_frames = []
+
+        for frame_num, frame in enumerate(frames):
+            frame = frame.copy()
+
+            overlay = frame.copy()
+            cv2.rectangle(overlay,(0, 0), (500, 100), (255, 255, 255), -1)
+            alpha = 0.6
+            cv2.addWeighted(overlay, alpha, frame, 1-alpha, 0, frame)
+
+            x_movement, y_movement = camera_movement_per_frame[frame_num]
+            frame = cv2.putText(frame, f"Camera Movement X: {x_movement: .2f}",(10,30),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,0),2)
+            frame = cv2.putText(frame, f"Camera Movement Y: {y_movement: .2f}",(10,60),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,0),2)
+
+            output_frames.append(frame)
+
+            return output_frames
+
