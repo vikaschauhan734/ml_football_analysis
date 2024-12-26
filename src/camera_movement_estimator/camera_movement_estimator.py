@@ -85,5 +85,5 @@ class CameraMovementEstimator():
 
             output_frames.append(frame)
 
-            return output_frames
+        return output_frames
 
