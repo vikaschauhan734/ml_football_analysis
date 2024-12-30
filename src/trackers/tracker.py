@@ -5,13 +5,24 @@ import numpy as np
 import pandas as pd
 import os
 import cv2
-from src.utils.bbox_utils import get_bbox_width, get_center_of_bbox
+from src.utils.bbox_utils import get_bbox_width, get_center_of_bbox, get_foot_position
 
 
 class tracker:
     def __init__(self, model_path):
         self.model = YOLO(model_path)
         self.tracker = sv.ByteTrack()
+
+    def add_position_to_tracks(self, tracks):
+        for object, object_tracks in tracks.items():
+            for frame_num, track in enumerate(object_tracks):
+                for track_id, track_info in track.items():
+                    bbox = track_info['bbox']
+                    if object == "ball":
+                        position = get_center_of_bbox(bbox) # Center of ball
+                    else:
+                        position = get_foot_position(bbox) # Foot position
+                    tracks[object][frame_num][track_id]['position'] = position
 
     def interpolate_ball_positions(self, ball_positions):
         ball_positions = [x.get(1, {}).get("bbox", []) for x in ball_positions] # Get the data of track id = 1 if it is not present then give empty dictionary. And from that get bbox if not bbox then empty list
@@ -25,7 +36,6 @@ class tracker:
         ball_positions = [{1: {"bbox":x}} for x in df_ball_positions.to_numpy().tolist()]
 
         return ball_positions
-
 
     def detect_frames(self, frames):
         batch_size = 20 # 20 frames in one loop to solve memory issue problem
