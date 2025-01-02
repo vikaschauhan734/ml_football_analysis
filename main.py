@@ -3,6 +3,7 @@ from src.trackers.tracker import tracker
 from src.team_assigner import TeamAssigner
 from src.player_ball_assigner import PlayerBallAssigner
 from src.camera_movement_estimator.camera_movement_estimator import CameraMovementEstimator
+from src.view_transformer.view_transformer import ViewTransformer
 import numpy as np
 
 def main():
@@ -22,6 +23,10 @@ def main():
     camera_movement_per_frame = camera_movement_estimator.get_camera_movement(video_frames,
                                                                               read_from_stub=True,
                                                                               stub_path='stubs/camera_movement_stub.pkl')
+
+    # View Transformer
+    view_transformer = ViewTransformer()
+    view_transformer.add_transformed_position_to_tracks(tracks)
 
     # Get ajusted position to tracks
     camera_movement_estimator.add_adjust_position_to_tracks(tracks, camera_movement_per_frame)

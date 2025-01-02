@@ -7,19 +7,19 @@ class ViewTransformer():
         court_width = 68
         court_length = 23.32
 
-        self.pixel_verticies = np.array({
+        self.pixel_verticies = np.array([
             [110, 1035], # Points of the trapeziod
             [265, 275],
             [910,260],
             [1640,915]
-        })
+        ])
 
-        self.target_verticies = np.array({
+        self.target_verticies = np.array([
             [0, court_width],
             [0, 0],
             [court_length, 0],
             [court_length, court_width]
-        })
+        ])
 
         self.pixel_verticies = self.pixel_verticies.astype(np.float32)
         self.target_verticies = self.target_verticies.astype(np.float32)
@@ -27,7 +27,15 @@ class ViewTransformer():
         self.perspective_transformer = cv2.getPerspectiveTransform(self.pixel_verticies, self.target_verticies)
 
     def transform_point(self, point):
-        pass
+        p = int(point[0]), int(point[1])
+        is_inside = cv2.pointPolygonTest(self.pixel_verticies, p, False) >= 0 # Check if point is in the trapezoid or not
+        if not is_inside:
+            return None
+        
+        reshaped_point = point.reshape(-1,1,2).astype(np.float32)
+        transform_point = cv2.perspectiveTransform(reshaped_point, self.perspective_transformer)
+
+        return transform_point.reshape(-1,2)
 
     def add_transformed_position_to_tracks(self, tracks):
         for object, object_tracks in tracks.items():
