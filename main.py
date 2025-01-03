@@ -24,12 +24,12 @@ def main():
                                                                               read_from_stub=True,
                                                                               stub_path='stubs/camera_movement_stub.pkl')
 
+    # Get ajusted position to tracks
+    camera_movement_estimator.add_adjust_position_to_tracks(tracks, camera_movement_per_frame)
+
     # View Transformer
     view_transformer = ViewTransformer()
     view_transformer.add_transformed_position_to_tracks(tracks)
-
-    # Get ajusted position to tracks
-    camera_movement_estimator.add_adjust_position_to_tracks(tracks, camera_movement_per_frame)
 
     # Interpolate Ball Positions
     tracks["ball"] = tracke.interpolate_ball_positions(tracks["ball"])
