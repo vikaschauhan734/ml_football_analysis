@@ -4,6 +4,7 @@ from src.team_assigner import TeamAssigner
 from src.player_ball_assigner import PlayerBallAssigner
 from src.camera_movement_estimator.camera_movement_estimator import CameraMovementEstimator
 from src.view_transformer.view_transformer import ViewTransformer
+from src.speed_and_distance_estimator.speed_and_distance_estimator import SpeedAndDistanceEstimator
 import numpy as np
 
 def main():
@@ -47,6 +48,10 @@ def main():
 
     #     break
 
+    # Speed and Distance Estimator
+    speed_and_disance_estimator = SpeedAndDistanceEstimator()
+    speed_and_disance_estimator.add_speed_and_distance_to_tracks(tracks)
+
     # Assign Player Teams
     team_assign = TeamAssigner()
     team_assign.assign_team_color(video_frames[0], tracks['players'][0]) # first frame and tracks only of first frame
@@ -78,6 +83,9 @@ def main():
 
     ## Draw camera movement
     output_video_frames = camera_movement_estimator.draw_camera_movement(output_video_frames, camera_movement_per_frame)
+
+    ## Draw Speed and Distance
+    speed_and_disance_estimator.draw_speed_and_distance(output_video_frames, tracks)
 
     # Save video
     save_video(output_video_frames, 'output_video/output_video.avi')
