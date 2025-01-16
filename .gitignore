@@ -7,3 +7,5 @@ models/best_11l.pt
 models/last_11l.pt
 models/best_5l.pt
 models/last_5l.pt
+models/best_11l1280.pt
+models/last_11l1280.pt
